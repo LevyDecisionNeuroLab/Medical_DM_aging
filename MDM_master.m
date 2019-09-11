@@ -3,7 +3,7 @@ function MDM_master(observer)
 % clear;
 addpath(genpath('Z:\Aging\Medical Decision Making\Medical_DM_aging\Function'))
 %% 1. What order should the blocks be run in?
-% define 
+% define mon vs med function scripts
 Mon1 = @MDM_PTB_mon1_v2;
 Mon2 = @MDM_PTB_mon2_v2;
 Med1 = @MDM_PTB_med1_v2;
