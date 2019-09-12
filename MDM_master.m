@@ -1,8 +1,14 @@
 function MDM_master(observer)
 % clc;
 % clear;
-addpath(genpath('Z:\Aging\Medical Decision Making\Medical_DM_aging\Function'))
-%% 1. What order should the blocks be run in?
+%% 0. Addpath
+datapath = 'Y:\Aging\Medical Decision Making\Medical_DM_aging\data';
+functionpath = 'Y:\Aging\Medical Decision Making\Medical_DM_aging\Function';
+addpath(genpath(datapath))
+addpath(genpath(functionpath))
+%% 1. Caliberation
+TrackerCaliberation;
+%% 2. What order should the blocks be run in?
 % define mon vs med function scripts
 Mon1 = @MDM_PTB_mon1_v2;
 Mon2 = @MDM_PTB_mon2_v2;
@@ -21,11 +27,12 @@ if sum(Mon) > sum(Med)
 else
     runFunction = {Med1, Med2, Mon1, Mon2}; % Medical blocks go first
 end
-%% 2. Run blocks
+%% 3. Run blocks
 for b = 1:length(runFunction)
 runFunction{b}(observer);
 Screen('Close')
 end
 Screen('CloseAll') % Close screen and psychtoolbox
+end
 
 
