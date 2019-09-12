@@ -109,7 +109,7 @@ Screen('flip',Win.win);
 elapsedTime=etime(datevec(now),Data.trialTime(trial).trialStartTime);
 while elapsedTime<Data.stimulus.lottoDisplayDur % while the 10 seconds max is not reached
     [keyisdown, secs, keyCode, deltaSecs] = KbCheck;
-    if keyisdown && (keyCode(KbName('2@')) || keyCode(KbName('1!'))) % 1 or 2 is pressed
+    if keyisdown && (keyCode(KbName('*')) || keyCode(KbName('/'))) % 1 or 2 is pressed was 2@ or 1!
         elapsedTime=etime(datevec(now),Data.trialTime(trial).trialStartTime); % response time
         break
     end
@@ -133,7 +133,7 @@ end
 % % end
 
 % record response, and specify feedback drawing parameters
-if keyisdown && keyCode(KbName('1!'))            %% Reversed keys '1' and '2' - DE
+if keyisdown && keyCode(KbName('/'))            %% Reversed keys '1' and '2' - DE was 1!
     Data.choice(trial)=1;
     Data.rt(trial)=elapsedTime;
     if Data.refSide==2 % if ref is on the right
@@ -144,7 +144,7 @@ if keyisdown && keyCode(KbName('1!'))            %% Reversed keys '1' and '2' - 
         whiteDims=[-.5*Win.winrect(3)/10 -100 -.5*Win.winrect(3)/10 -100]+[5.5*Win.winrect(3)/10-20 Win.winrect(4)/2-20 5.5*Win.winrect(3)/10+20 Win.winrect(4)/2+20];
     end
     yellowColor=[255 255 0]; % yellow
-elseif keyisdown && keyCode(KbName('2@'))        %% Reversed keys '2' and '1' - DE
+elseif keyisdown && keyCode(KbName('*'))        %% Reversed keys '2' and '1' - DE was 2@
     Data.choice(trial)=2;
     Data.rt(trial)=elapsedTime;
     if Data.refSide==2
@@ -190,8 +190,9 @@ Screen('flip',Win.win);
 
 % control ITI time
 %Data.trialTime(trial).ITIStartTime=datevec(now);
-elapsedTime=etime(datevec(now),Data.trialTime(trial).trialStartTime);
+Data.trialTime(trial).ITIStartTime=datevec(now);
+elapsedTime=etime(datevec(now),Data.trialTime(trial).ITIStartTime);
 while elapsedTime<Data.stimulus.ITIDur %Data.stimulus.lottoDisplayDur+Data.stimulus.responseWindowDur+Data.stimulus.feedbackDur+Data.ITIs(trial)
-    elapsedTime=etime(datevec(now),Data.trialTime(trial).trialStartTime);
+    elapsedTime=etime(datevec(now),Data.trialTime(trial).ITIStartTime);
 end
 end

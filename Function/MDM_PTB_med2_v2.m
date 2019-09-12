@@ -34,7 +34,13 @@ function MDM_PTB_med2_v2(observer);
 % Skip sync test. May be commented out on the laptop
 % Screen('Preference','SkipSyncTests',1);
 
+% add eyetracker setup
+Tobii = EyeTrackingOperations();
+eyetracker_address = 'tet-tcp://169.254.6.122';
+eyetracker = Tobii.get_eyetracker(eyetracker_address);
+
 KbName('KeyNamesWindows');
+KbCheck(-2);
 s = RandStream.create('mt19937ar','seed',sum(100*clock));
 RandStream.setGlobalStream(s); % ????????????????????????????????????????????????????
 whichScreen = 0;
@@ -191,13 +197,13 @@ Img.rcvTexture = Screen('MakeTexture', Win.win, rcvData);
 %% Run through the trials
 % decide mon/med go first
 blockNum=3; % first block of both monetary and medical
-
+breakscript = '\n\nYou can take a short break now.\nPlease remain seated and do not move your chair.\n\n[When ready, press 5 to start]';
 % get the text dimension for probabilities
 Datamed.stimulus.textDims.probabilities = getTextDims(Win.win,'50', Datamed.stimulus.fontSize.probabilities);% get the text dimensons for probability
 
         Screen(Win.win, 'FillRect',1); % what is 1 here?????????????????????????
         Screen('TextSize', Win.win, Datamed.stimulus.fontSize.pause);
-        DrawFormattedText(Win.win, ['Medical Block ' num2str(blockNum)],'center','center',Datamed.stimulus.fontColor);
+        DrawFormattedText(Win.win, ['Medical Block ' num2str(blockNum) breakscript],'center','center',Datamed.stimulus.fontColor);
         %DrawFormattedText(wPtr,textString,sx,sy,color,wrapat,flipHorizontal,flipVertical, vSpacing, rightoleft, winRect)
         drawRefmed(Datamed,Win,Img)
         Screen('flip',Win.win);
@@ -207,17 +213,21 @@ Datamed.stimulus.textDims.probabilities = getTextDims(Win.win,'50', Datamed.stim
         % run through the monetary first block        
         for trial=(blockNum-1)*21+1 : blockNum*21 
             Datamed.trialTime(trial).trialStartTime=datevec(now);
+            Datamed.trialTime(trial).TobiiTrialStartTime= Tobii.get_system_time_stamp;
+            eyetracker.get_gaze_data();
             Datamed=drawLotto_LSRAmed(Datamed,trial,Win,Img); % Draw lottery. The function also controls lottory display time
             Datamed.trialTime(trial).trialEndTime=datevec(now);
-            eval(sprintf('save %s.mat Datamed',Datamed.filename)) % save data
+            Datamed.trialTime(trial).TobiiTrialEndTime= Tobii.get_system_time_stamp;
+            Datamed.gazeAll{trial} = eyetracker.get_gaze_data();
+            %eval(sprintf('save %s.mat Datamed',Datamed.filename)) % save data
         end
    
 blockNum=4; % first block of both monetary and medical
-
+breakscript = '\n\nYou can take a short break now.\nPlease remain seated and do not move your chair.\n\n[When ready, press 5 to start]';
         % introduce a pause 
         Screen(Win.win, 'FillRect',1);
         Screen('TextSize', Win.win, Datamed.stimulus.fontSize.pause);
-        DrawFormattedText(Win.win, ['Medical Block ' num2str(blockNum)],'center','center',Datamed.stimulus.fontColor);
+        DrawFormattedText(Win.win, ['Medical Block ' num2str(blockNum) breakscript],'center','center',Datamed.stimulus.fontColor);
         drawRefmed(Datamed,Win,Img)
         Screen('flip',Win.win);
         waitForBackTick;
@@ -226,17 +236,23 @@ blockNum=4; % first block of both monetary and medical
         % run through the medical block
         for trial=(blockNum-1)*21+1 : blockNum*21 
             Datamed.trialTime(trial).trialStartTime=datevec(now);
+            Datamed.trialTime(trial).TobiiTrialStartTime= Tobii.get_system_time_stamp;
+            eyetracker.get_gaze_data();
             Datamed=drawLotto_LSRAmed(Datamed,trial,Win,Img); % Draw lottery. The function also controls lottory display time
             Datamed.trialTime(trial).trialEndTime=datevec(now);
-            eval(sprintf('save %s.mat Datamed',Datamed.filename)) % save data
+            Datamed.trialTime(trial).TobiiTrialEndTime= Tobii.get_system_time_stamp;
+            Datamed.gazeAll{trial} = eyetracker.get_gaze_data();
+            %eval(sprintf('save %s.mat Datamed',Datamed.filename)) % save data
         end
         
         % finish the first two blocks
         Screen(Win.win, 'FillRect',1);
         Screen('TextSize', Win.win, Datamed.stimulus.fontSize.pause);
-        DrawFormattedText(Win.win,'Finished all Medical Blocks','center','center',Datamed.stimulus.fontColor);
+        DrawFormattedText(Win.win,'Finished all Medical Blocks.\nSaving data...','center','center',Datamed.stimulus.fontColor);
         Screen('flip',Win.win);
-        waitForBackTick;
+        eval(sprintf('save %s.mat Datamed',Datamed.filename)) % save data
+        WaitSecs(1);
+        %waitForBackTick;
      
 Datamed=experimentSummaryMed(Datamed);  %Commented Out Summary from firstsection-DE
 eval(sprintf('save %s.mat Datamed',Datamed.filename)) % save data

@@ -34,7 +34,13 @@ function MDM_PTB_mon1_v2(observer);
 % Skip sync test. May be commented out on the laptop
 % Screen('Preference','SkipSyncTests',1);
 
+% add eyetracker setup
+Tobii = EyeTrackingOperations();
+eyetracker_address = 'tet-tcp://169.254.6.122';
+eyetracker = Tobii.get_eyetracker(eyetracker_address);
+
 KbName('KeyNamesWindows');
+KbCheck(-2);
 s = RandStream.create('mt19937ar','seed',sum(100*clock));
 RandStream.setGlobalStream(s); % ????????????????????????????????????????????????????
 whichScreen = 0;
@@ -79,7 +85,7 @@ Datamon.colorKey={'blue','red'};
 %Datamed.stimulus.responseWindowDur=3.5; 
 Datamon.stimulus.feedbackDur=.5;
 Datamon.stimulus.lottoDisplayDur=10;
-Datamon.stimulus.ITIDur = 4.5;
+Datamon.stimulus.ITIDur = 4.5; % 4.5 for task
 
 
 %load image, structure: Img
@@ -200,13 +206,17 @@ Datamon.numTrials=length(Datamon.vals);
 
 %% Run through the trials
 blockNum=1; % first block 
-
+if isfile(['MDM_MED_' observer])
+    breakscript = '\n\nYou can take a short break now.\nPlease remain seated and do not move your chair.\n\n[When ready, press 5 to start]';
+else
+    breakscript = '\n\n[Press 5 to start]';
+end
 % get the text dimension for probabilities
 Datamon.stimulus.textDims.probabilities = getTextDims(Win.win,'50', Datamon.stimulus.fontSize.probabilities);% get the text dimensons for probability
 
         Screen(Win.win, 'FillRect',1); % what is 1 here? it should be the color of black
         Screen('TextSize', Win.win, Datamon.stimulus.fontSize.pause);
-        DrawFormattedText(Win.win, ['Monetary Block ' num2str(blockNum)],'center','center',Datamon.stimulus.fontColor);
+        DrawFormattedText(Win.win, ['Monetary Block ' num2str(blockNum) '\n' breakscript],'center','center',Datamon.stimulus.fontColor);
         %DrawFormattedText(wPtr,textString,sx,sy,color,wrapat,flipHorizontal,flipVertical, vSpacing, rightoleft, winRect)
         drawRef(Datamon,Win,Img)
         Screen('flip',Win.win);
@@ -216,17 +226,21 @@ Datamon.stimulus.textDims.probabilities = getTextDims(Win.win,'50', Datamon.stim
         % run through the monetary first block        
         for trial=(blockNum-1)*21+1 : blockNum*21
             Datamon.trialTime(trial).trialStartTime=datevec(now);
+            Datamon.trialTime(trial).TobiiTrialStartTime= Tobii.get_system_time_stamp;
+            eyetracker.get_gaze_data();
             Datamon=drawLotto_LSRA(Datamon,trial,Win,Img); % Draw lottery. The function also controls lottory display time
             Datamon.trialTime(trial).trialEndTime=datevec(now);
-            eval(sprintf('save %s.mat Datamon',Datamon.filename)) % save data
+            Datamon.trialTime(trial).TobiiTrialEndTime= Tobii.get_system_time_stamp;
+            Datamon.gazeAll{trial} = eyetracker.get_gaze_data();
+            %eval(sprintf('save %s.mat Datamon',Datamon.filename)) % save data
         end
         
  blockNum=2; % second block
-       
+ breakscript = '\nYou can take a short break now.\nPlease remain seated and do not move your chair.\n\n[When ready, press 5 to start]';      
         % introduce a pause 
         Screen(Win.win, 'FillRect',1);
         Screen('TextSize', Win.win, Datamon.stimulus.fontSize.pause);
-        DrawFormattedText(Win.win, ['Monetary Block ' num2str(blockNum)],'center','center',Datamon.stimulus.fontColor);
+        DrawFormattedText(Win.win, ['Monetary Block ' num2str(blockNum) '\n' breakscript],'center','center',Datamon.stimulus.fontColor);
         drawRef(Datamon,Win,Img)
         Screen('flip',Win.win);
         
@@ -235,18 +249,24 @@ Datamon.stimulus.textDims.probabilities = getTextDims(Win.win,'50', Datamon.stim
         % run through the monetary second block        
         for trial=(blockNum-1)*21+1 : blockNum*21
             Datamon.trialTime(trial).trialStartTime=datevec(now);
+            Datamon.trialTime(trial).TobiiTrialStartTime= Tobii.get_system_time_stamp;
+            eyetracker.get_gaze_data();
             Datamon=drawLotto_LSRA(Datamon,trial,Win,Img); % Draw lottery. The function also controls lottory display time
             Datamon.trialTime(trial).trialEndTime=datevec(now);
-            eval(sprintf('save %s.mat Datamon',Datamon.filename)) % save data
+            Datamon.trialTime(trial).TobiiTrialEndTime= Tobii.get_system_time_stamp;
+            Datamon.gazeAll{trial} = eyetracker.get_gaze_data();
+            %eval(sprintf('save %s.mat Datamon',Datamon.filename)) % save data
         end
 
         
         
         Screen(Win.win, 'FillRect',1);
         Screen('TextSize', Win.win, Datamon.stimulus.fontSize.pause);
-        DrawFormattedText(Win.win,'Finished first two Monetary Blocks','center','center',Datamon.stimulus.fontColor);
+        DrawFormattedText(Win.win,'Finished the first two Monetary Blocks.\nSaving data...','center','center',Datamon.stimulus.fontColor);
         Screen('flip',Win.win);
-        waitForBackTick;
+        eval(sprintf('save %s.mat Datamon',Datamon.filename))
+        WaitSecs(1);
+        %waitForBackTick;
     % finish the first two blocks
 
 %Data=experimentSummary(Data);  %Commented Out Summary from firstsection-DE
